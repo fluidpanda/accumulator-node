@@ -23,6 +23,7 @@ export default [
         rules: {
             "@typescript-eslint/no-explicit-any": "warn",
             "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+            "@typescript-eslint/array-type": ["warn", { default: "generic", readonly: "generic" }],
             "@typescript-eslint/consistent-type-imports": [
                 "error",
                 {
