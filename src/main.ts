@@ -1,8 +1,10 @@
 import type { DiscoveredDevice } from "@/adapters/types";
+import type { ApiServer } from "@/api/http";
 import type { Listener } from "@/listener/listener";
 import type { Logger } from "@/logging/logger";
 import type { ServiceDependencies } from "@/service/deps";
 import type { Runner } from "@/service/runner";
+import { createApi } from "@/api/http";
 import { initEnv, envStr, envInt } from "@/helpers/envs";
 import { createListener } from "@/listener/listener";
 import { createLogger } from "@/logging/logger";
@@ -11,10 +13,11 @@ import { createRunner } from "@/service/runner";
 
 initEnv();
 
-const UDP_BIND_HOST: string = envStr("UDP_BIND_HOST") ?? "0.0.0.0";
-const UDP_PORT: number = envInt("UDP_PORT", 4_5454);
+const BIND_HOST: string = envStr("BIND_HOST") ?? "0.0.0.0";
+const CAPTURE_PORT: number = envInt("CAPTURE_PORT", 4_5454);
 const POLLING_INTERVAL_MS: number = envInt("POLLING_INTERVAL_MS", 5_000);
 const DEVICE_TTL_MS: number = envInt("DEVICE_TTL_MS", 60_000);
+const WEB_PORT: number = envInt("WEB_PORT", 8080);
 
 const logger: Logger = createLogger();
 
@@ -28,21 +31,24 @@ async function main(): Promise<void> {
     });
     const listener: Listener = createListener({
         logger,
-        bindHost: UDP_BIND_HOST,
-        port: UDP_PORT,
+        bindHost: BIND_HOST,
+        port: CAPTURE_PORT,
         onDevice: (d: DiscoveredDevice): void => {
             return runner.onDevice(d);
         },
+    });
+    const api: ApiServer = createApi({
+        logger,
+        runner,
+        host: BIND_HOST,
+        port: WEB_PORT,
     });
     const shutdown: (reason: string) => Promise<void> = async (reason: string): Promise<void> => {
         logger.info({ reason }, "shutdown");
         try {
             await listener.stop();
-        } catch (err: unknown) {
-            logger.error({ err });
-        }
-        try {
             await runner.stop();
+            await api.stop();
         } catch (err: unknown) {
             logger.error({ err });
         }
@@ -59,6 +65,7 @@ async function main(): Promise<void> {
     });
     await listener.start();
     runner.start();
+    await api.start();
     logger.info("accumulator started");
 }
 

@@ -1,0 +1,44 @@
+body {
+    font-family: system-ui, sans-serif;
+    margin: 40px;
+    background: #111;
+    color: #eee;
+}
+
+h1 {
+    font-weight: 600;
+}
+
+.card {
+    margin-top: 20px;
+    padding: 20px;
+    border: 1px solid #333;
+    border-radius: .8em;
+    max-width: 400px;
+    background: #1a1a1a;
+}
+
+.label {
+    font-size: 14px;
+    opacity: 0.6;
+    margin-top: 12px;
+}
+
+.value {
+    font-size: 48px;
+    font-weight: 700;
+    margin-top: 4px;
+}
+
+.warning {
+    color: lightsalmon;
+}
+
+.mono {
+    font-family: monospace;
+}
+
+.muted {
+    opacity: 0.6;
+    margin-top: 8px;
+}

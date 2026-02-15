@@ -1,0 +1,54 @@
+<html lang="en">
+<head>
+    <title>Accumulator</title>
+    <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
+    <link rel="stylesheet" type="text/css" href="style.css" />
+    <script type="text/javascript" src="script.js"></script>
+</head>
+<body>
+<h1>Accumulator</h1>
+<div class="card">
+    <div class="label">Device</div>
+    <div id="deviceId" class="mono">—</div>
+    <div class="label">CO₂</div>
+    <div id="co2ppm" class="value">—</div>
+    <div id="status" class="muted">No data</div>
+</div>
+<script type="text/javascript">
+    // <![CDATA[
+    function getCo2ppm(snapshot) {
+        if (!snapshot || !snapshot.metrics) return null;
+        const v = snapshot.metrics["co2ppm"];
+        return typeof v === "number" && isFinite(v) ? v : null;
+    }
+    function pickDevice(state) {
+        if (!state.devices || state.devices.length === 0) return null;
+        for (let i = 0; i < state.devices.length; i++) {
+            if (state.devices[i].snapshot) return state.devices[i];
+        }
+        return state.devices[0];
+    }
+    async function tick() {
+        try {
+            const res = await fetch("/state");
+            const state = await res.json();
+            const d = pickDevice(state);
+            if (!d) return;
+            document.getElementById("deviceId").textContent = d.id;
+            const co2ppm = getCo2ppm(d.snapshot);
+            const value = document.getElementById("co2ppm");
+            value.textContent = co2ppm === null ? "—" : String(co2ppm);
+            if (co2ppm !== null && co2ppm > 600) {
+                value.classList.add("warning");
+            } else {
+                value.classList.remove("warning");
+            }
+            document.getElementById("status").textContent = d.snapshot && d.snapshot.ok ? "OK" : "ERROR";
+        } catch (err) {}
+    }
+    setInterval(tick, 5_000);
+    tick();
+    // ]]>
+</script>
+</body>
+</html>

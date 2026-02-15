@@ -10,15 +10,27 @@ export interface RunnerOptions {
     deviceTtlMs: number;
 }
 
+export interface RunnerState {
+    devices: Array<{
+        id: string;
+        kind?: string;
+        lastSeenMs: number;
+        api?: unknown;
+        snapshot?: SensorSnapshot | null;
+    }>;
+}
+
 export interface Runner {
     start(): void;
     stop(): Promise<void>;
     onDevice(device: DiscoveredDevice): void;
+    getState(): RunnerState;
 }
 
 interface RuntimeDevice {
     device: DiscoveredDevice;
     lastSeenMs: number;
+    lastSnapshot: SensorSnapshot | null;
 }
 
 export function createRunner(opts: RunnerOptions): Runner {
@@ -31,7 +43,11 @@ export function createRunner(opts: RunnerOptions): Runner {
     function upsert(device: DiscoveredDevice): void {
         const now: number = Date.now();
         const prev: RuntimeDevice | undefined = devices.get(device.id);
-        devices.set(device.id, { device, lastSeenMs: now });
+        devices.set(device.id, {
+            device,
+            lastSeenMs: now,
+            lastSnapshot: prev?.lastSnapshot ?? null,
+        });
         if (!prev) {
             logger.info({ deviceId: device.id, api: device.api }, "registered");
         } else {
@@ -55,6 +71,10 @@ export function createRunner(opts: RunnerOptions): Runner {
         const adapter: Adapter = createAdapter(opts.adapterRegistry, device, { logger });
         try {
             const snapshot: SensorSnapshot = await adapter.poll();
+            const current: RuntimeDevice | undefined = devices.get(device.id);
+            if (current) {
+                devices.set(device.id, { ...current, lastSnapshot: snapshot });
+            }
             logger.info(
                 {
                     deviceId: device.id,
@@ -92,6 +112,17 @@ export function createRunner(opts: RunnerOptions): Runner {
                 void tick();
             }, opts.pollingIntervalMs);
             logger.info({ pollIntervalMs: opts.pollingIntervalMs, deviceTtlMs: opts.deviceTtlMs });
+        },
+        getState(): RunnerState {
+            return {
+                devices: Array.from(devices.values()).map((rt: RuntimeDevice) => ({
+                    id: rt.device.id,
+                    kind: rt.device.kind,
+                    lastSeenMs: rt.lastSeenMs,
+                    api: rt.device.api,
+                    snapshot: rt.lastSnapshot,
+                })),
+            };
         },
         async stop(): Promise<void> {
             running = false;
