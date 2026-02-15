@@ -24,6 +24,17 @@ export default [
             "@typescript-eslint/no-explicit-any": "warn",
             "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
             "@typescript-eslint/array-type": ["warn", { default: "generic", readonly: "generic" }],
+            "@typescript-eslint/explicit-function-return-type": [
+                "warn",
+                {
+                    allowExpressions: false,
+                    allowTypedFunctionExpressions: false,
+                    allowHigherOrderFunctions: false,
+                },
+            ],
+            "@typescript-eslint/explicit-module-boundary-types": "warn",
+            "arrow-body-style": ["warn", "always"],
+            "arrow-parens": ["warn", "always"],
             "@typescript-eslint/consistent-type-imports": [
                 "error",
                 {
