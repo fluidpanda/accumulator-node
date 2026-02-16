@@ -23,7 +23,7 @@ export function createApi(opts: ApiOpts): ApiServer {
     const filename: string = fileURLToPath(import.meta.url);
     const dirname: string = path.dirname(filename);
 
-    app.get("/state", (): RunnerState => {
+    app.get("/api/state", (): RunnerState => {
         return opts.runner.getState();
     });
     app.register(fastifyStatic, {
