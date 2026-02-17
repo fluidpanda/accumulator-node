@@ -45,7 +45,7 @@ function renderPlaceholder(container: HTMLElement): void {
 }
 
 function createDeviceCard(d: Device): HTMLElement {
-    const card = el("div", "card");
+    const card: HTMLElement = el("div", "card");
     card.setAttribute("data-device-id", d.id);
     card.appendChild(el("div", "label", "Device"));
     card.appendChild(el("div", "mono", d.id));
