@@ -15,17 +15,33 @@
                 if (text !== undefined) x.textContent = text;
                 return x;
             }
+
+            function byId(id) {
+                const x = document.getElementById(id);
+                if (!x) throw new Error(`Missing element id="${id}"`);
+                return x;
+            }
+
+            function qs(root, selector) {
+                const x = root.querySelector(selector);
+                if (!x) throw new Error(`Missing element: ${selector}`);
+                return x;
+            }
+
             function getCo2ppm(snapshot) {
                 if (!snapshot || !snapshot.metrics) return null;
                 const v = snapshot.metrics["co2ppm"];
-                return typeof v === "number" && isFinite(v) ? v : null;
+                return typeof v === "number" && Number.isFinite(v) ? v : null;
             }
+
             function renderPlaceholder(container) {
+                container.innerHTML = "";
                 const card = el("div", "card placeholder");
                 card.appendChild(el("div", "label", "No devices"));
                 card.appendChild(el("div", "muted", "Waiting for UDP announce..."));
                 container.appendChild(card);
             }
+
             function createDeviceCard(d) {
                 const card = el("div", "card");
                 card.setAttribute("data-device-id", d.id);
@@ -40,57 +56,63 @@
                 card.appendChild(status);
                 return card;
             }
+
             function updateDeviceCard(card, d) {
                 const co2ppm = getCo2ppm(d.snapshot);
-                const value = card.querySelector('[data-role="co2ppm"]');
-                const status = card.querySelector('[data-role="status"]');
+                const value = qs(card, '[data-role="co2ppm"]');
+                const status = qs(card, '[data-role="status"]');
                 value.textContent = co2ppm === null ? "—" : String(co2ppm);
-                if (co2ppm !== null && co2ppm > 600) {
-                    value.classList.add("warning");
-                } else {
-                    value.classList.remove("warning");
-                }
+                if (co2ppm !== null && co2ppm > 600) value.classList.add("warning");
+                else value.classList.remove("warning");
                 if (!d.snapshot) {
                     status.textContent = "Waiting for first snapshot...";
                 } else {
-                    status.textContent = d.snapshot.ok ? "OK" : "ERROR: " + (d.snapshot.lastError || "unknown");
+                    status.textContent = d.snapshot.ok ? "OK" : `ERROR: ${d.snapshot.lastError || "unknown"}`;
                 }
             }
+
             function renderState(state) {
-                const container = document.getElementById("cards");
+                const container = byId("cards");
                 if (!state || !state.devices || state.devices.length === 0) {
-                    container.innerHTML = "";
                     renderPlaceholder(container);
                     return;
                 }
-                const existing = {};
+                const existing = new Map();
                 const nodes = container.querySelectorAll(".card[data-device-id]");
-                for (let i = 0; i < nodes.length; i++) {
-                    existing[nodes[i].getAttribute("data-device-id")] = nodes[i];
+                for (const node of nodes) {
+                    const id = node.getAttribute("data-device-id");
+                    if (id) existing.set(id, node);
                 }
-                const placeholders = container.querySelectorAll(".card.placeholder");
-                for (let j = 0; j < placeholders.length; j++) {
-                    container.removeChild(placeholders[j]);
+                for (const ph of container.querySelectorAll(".card.placeholder")) {
+                    ph.remove();
                 }
-                for (let k = 0; k < state.devices.length; k++) {
-                    const d = state.devices[k];
-                    let card = existing[d.id];
+                for (const d of state.devices) {
+                    let card = existing.get(d.id);
                     if (!card) {
                         card = createDeviceCard(d);
                         container.appendChild(card);
                     }
                     updateDeviceCard(card, d);
                 }
+                for (const [id, card] of existing) {
+                    if (!state.devices.some((d) => d.id === id)) card.remove();
+                }
             }
+
             async function tick() {
-                try {
-                    const res = await fetch("/api/state");
-                    const state = await res.json();
-                    renderState(state);
-                } catch (err) {}
+                const res = await fetch("/api/state");
+                const state = (await res.json());
+                renderState(state);
             }
-            setInterval(tick, 5000);
-            tick();
+
+            function start() {
+                void tick().catch((err) => console.error(err));
+                setInterval(() => {
+                    void tick().catch((err) => console.error(err));
+                }, 5000);
+            }
+
+            start();
             // ]]>
         </script>
     </body>
