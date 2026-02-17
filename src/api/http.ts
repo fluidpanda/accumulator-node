@@ -1,9 +1,7 @@
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-import fastifyStatic from "@fastify/static";
 import Fastify from "fastify";
 import type { Logger } from "@/logging/logger";
 import type { Runner, RunnerState } from "@/service/runner";
+import { renderPage } from "@/api/static/page";
 
 export interface ApiOpts {
     logger: Logger;
@@ -20,15 +18,13 @@ export interface ApiServer {
 export function createApi(opts: ApiOpts): ApiServer {
     const logger: Logger = opts.logger.child({ module: "api" });
     const app = Fastify({ loggerInstance: logger });
-    const filename: string = fileURLToPath(import.meta.url);
-    const dirname: string = path.dirname(filename);
 
     app.get("/api/state", (): RunnerState => {
         return opts.runner.getState();
     });
-    app.register(fastifyStatic, {
-        root: path.join(dirname, "static"),
-        prefix: "/",
+    app.get("/", async (_req, reply) => {
+        reply.header("content-type", "text/html; charset=utf-8");
+        return renderPage();
     });
     return {
         async start(): Promise<void> {
