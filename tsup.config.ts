@@ -3,7 +3,7 @@ import { defineConfig } from "tsup";
 export default defineConfig({
     entry: ["src/main.ts"],
     format: ["esm"],
-    target: "node20",
+    target: "esnext",
     outDir: "dist",
     clean: true,
     sourcemap: true,
