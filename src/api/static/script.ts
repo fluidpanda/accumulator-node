@@ -1,3 +1,21 @@
+import {
+    Chart,
+    LineController,
+    LineElement,
+    PointElement,
+    LinearScale,
+    CategoryScale,
+    Tooltip,
+    Legend,
+} from "chart.js";
+
+Chart.register(LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend);
+
+interface MetricPoint {
+    tsMs: number;
+    value: number;
+}
+
 interface Device {
     id: string;
     snapshot?: {
@@ -9,6 +27,97 @@ interface Device {
 
 interface State {
     devices: Array<Device>;
+}
+
+let selectedDeviceId: string | null = null;
+
+async function refreshChart(): Promise<void> {
+    if (!selectedDeviceId) return;
+    const points: Array<MetricPoint> = await fetchHistory(selectedDeviceId);
+    updateChart(points);
+}
+
+function openOverlay(deviceId: string): void {
+    selectedDeviceId = deviceId;
+    const overlay: HTMLDivElement = byId<HTMLDivElement>("overlay");
+    const label: HTMLSpanElement = byId<HTMLSpanElement>("overlayDevice");
+    label.textContent = deviceId;
+    overlay.classList.add("open");
+    overlay.setAttribute("aria-hidden", "false");
+    void refreshChart().catch((err: unknown) => console.error(err));
+}
+
+function closeOverlay(): void {
+    selectedDeviceId = null;
+    const overlay = byId<HTMLDivElement>("overlay");
+    overlay.classList.remove("open");
+    overlay.setAttribute("aria-hidden", "true");
+}
+
+function wireOverlay(): void {
+    const overlay: HTMLDivElement = byId<HTMLDivElement>("overlay");
+    const btn: HTMLButtonElement = byId<HTMLButtonElement>("overlayClose");
+    btn.addEventListener("click", () => closeOverlay());
+    overlay.addEventListener("click", (ev: MouseEvent) => {
+        if (ev.target === overlay) closeOverlay();
+    });
+    window.addEventListener("keydown", (ev: KeyboardEvent) => {
+        if (ev.key === "Escape") closeOverlay();
+    });
+}
+
+let chart: Chart | null = null;
+
+async function fetchState(): Promise<State> {
+    const res: Response = await fetch("/api/state");
+    return (await res.json()) as State;
+}
+
+async function fetchHistory(deviceId: string): Promise<Array<MetricPoint>> {
+    const url = `/api/history?deviceId=${encodeURIComponent(deviceId)}&metric=co2ppm&limit=600`;
+    const res: Response = await fetch(url);
+    return (await res.json()) as Array<MetricPoint>;
+}
+
+function ensureChart(): Chart {
+    if (chart) return chart;
+    const canvas: HTMLCanvasElement = byId<HTMLCanvasElement>("chart");
+    chart = new Chart(canvas, {
+        type: "line",
+        data: {
+            labels: [],
+            datasets: [
+                {
+                    label: "CO₂ ppm",
+                    data: [],
+                    pointRadius: 0,
+                    borderWidth: 4,
+                    tension: 0.5,
+                    borderColor: "rgba(238,238,238,0.4)",
+                },
+            ],
+        },
+        options: {
+            animation: false,
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: { ticks: { color: "#eee" }, grid: { color: "rgba(255,255,255,0.08)" } },
+                y: { ticks: { color: "#eee" }, grid: { color: "rgba(255,255,255,0.08)" } },
+            },
+            plugins: {
+                legend: { labels: { color: "#eee" } },
+            },
+        },
+    });
+    return chart;
+}
+
+function updateChart(points: Array<MetricPoint>): void {
+    const c = ensureChart();
+    c.data.labels = points.map((p: MetricPoint): string => new Date(p.tsMs).toLocaleTimeString());
+    c.data.datasets[0].data = points.map((p: MetricPoint): number => p.value);
+    c.update();
 }
 
 function el(tag: string, className: string, text?: string): HTMLElement {
@@ -47,6 +156,8 @@ function renderPlaceholder(container: HTMLElement): void {
 function createDeviceCard(d: Device): HTMLElement {
     const card: HTMLElement = el("div", "card");
     card.setAttribute("data-device-id", d.id);
+    card.style.cursor = "pointer";
+    card.addEventListener("click", () => openOverlay(d.id));
     card.appendChild(el("div", "label", "Device"));
     card.appendChild(el("div", "mono", d.id));
     card.appendChild(el("div", "label", "CO₂"));
@@ -102,12 +213,15 @@ function renderState(state: State): void {
 }
 
 async function tick(): Promise<void> {
-    const res: Response = await fetch("/api/state");
-    const state = (await res.json()) as State;
+    const state: State = await fetchState();
     renderState(state);
+    if (selectedDeviceId) {
+        await refreshChart();
+    }
 }
 
 function start(): void {
+    wireOverlay();
     void tick().catch((err: unknown): void => console.error(err));
     setInterval((): void => {
         void tick().catch((err: unknown): void => console.error(err));
