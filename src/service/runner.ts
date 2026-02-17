@@ -1,5 +1,6 @@
 import type { AdapterRegistry } from "@/adapters/registry";
-import type { DiscoveredDevice, Adapter, SensorSnapshot } from "@/adapters/types";
+import type { DiscoveredDevice, Adapter, SensorSnapshot, MetricValue } from "@/adapters/types";
+import type { HistoryState } from "@/history/store";
 import type { Logger } from "@/logging/logger";
 import { createAdapter } from "@/adapters/factory";
 
@@ -8,6 +9,7 @@ export interface RunnerOptions {
     adapterRegistry: AdapterRegistry;
     pollingIntervalMs: number;
     deviceTtlMs: number;
+    history: HistoryState;
 }
 
 export interface RunnerState {
@@ -58,6 +60,7 @@ export function createRunner(opts: RunnerOptions): Runner {
         for (const [id, rt] of devices) {
             if (now - rt.lastSeenMs > opts.deviceTtlMs) {
                 devices.delete(id);
+                opts.history.prune(id);
                 logger.warn({ deviceId: id }, "device ttl expired");
             }
         }
@@ -84,6 +87,13 @@ export function createRunner(opts: RunnerOptions): Runner {
                 },
                 "snapshot received",
             );
+            const tsMs: number = Date.now();
+            const metric = "co2ppm";
+            const raw: MetricValue = snapshot.metrics?.[metric];
+            const co2ppm: number | null = typeof raw === "number" && Number.isFinite(raw) ? raw : null;
+            if (co2ppm !== null) {
+                opts.history.push(device.id, metric, { tsMs: tsMs, value: co2ppm });
+            }
         } finally {
             if (adapter.close) await adapter.close();
         }

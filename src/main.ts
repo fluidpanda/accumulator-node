@@ -1,11 +1,13 @@
 import type { DiscoveredDevice } from "@/adapters/types";
 import type { ApiServer } from "@/api/http";
+import type { HistoryState } from "@/history/store";
 import type { Listener } from "@/listener/listener";
 import type { Logger } from "@/logging/logger";
 import type { ServiceDependencies } from "@/service/deps";
 import type { Runner } from "@/service/runner";
 import { createApi } from "@/api/http";
 import { initEnv, envStr, envInt } from "@/helpers/envs";
+import { createHistoryState } from "@/history/store";
 import { createListener } from "@/listener/listener";
 import { createLogger } from "@/logging/logger";
 import { buildServiceDeps } from "@/service/deps";
@@ -23,8 +25,10 @@ const logger: Logger = createLogger();
 
 async function main(): Promise<void> {
     const deps: ServiceDependencies = buildServiceDeps(logger);
+    const history: HistoryState = createHistoryState({ maxPointsPerSeries: 10_000 });
     const runner: Runner = createRunner({
         logger,
+        history,
         adapterRegistry: deps.adapterRegistry,
         pollingIntervalMs: POLLING_INTERVAL_MS,
         deviceTtlMs: DEVICE_TTL_MS,
@@ -40,6 +44,7 @@ async function main(): Promise<void> {
     const api: ApiServer = createApi({
         logger,
         runner,
+        history,
         host: BIND_HOST,
         port: WEB_PORT,
     });
