@@ -1,4 +1,4 @@
-import { SCRIPT_JS } from "@/api/static/generated";
+import { SCRIPT_JS } from "@/frontend/res/generated";
 
 export function renderPage(): string {
     return /* html */ `
@@ -109,6 +109,39 @@ export function renderPage(): string {
         width: 100% !important;
         height: 100% !important;
     }
+    .overlay-controls {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+    .seg {
+        display: inline-flex;
+        border: 1px solid #333;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    .seg-btn {
+        background: transparent;
+        border: 0;
+        border-right: 1px solid #333;
+        color: #eee;
+        padding: 6px 10px;
+        cursor: pointer;
+        font-size: 12px;
+        opacity: 0.85;
+    }
+    .seg-btn:last-child {
+        border-right: 0;
+    }
+    .seg-btn:hover {
+        opacity: 1;
+    }
+    .seg-btn.active {
+        background: #222;
+        opacity: 1;
+    }
     </style>
 </head>
 <body>
@@ -121,7 +154,23 @@ export function renderPage(): string {
                     <span class="overlay-title">History</span>
                     <span id="overlayDevice" class="overlay-sub"></span>
                 </div>
-                <button id="overlayClose" class="btn" type="button">Close</button>
+                <div class="overlay-controls">
+                    <div class="seg" role="group" aria-label="Range">
+                        <button class="seg-btn" data-range="1m" type="button">1m</button>
+                        <button class="seg-btn" data-range="5m" type="button">5m</button>
+                        <button class="seg-btn" data-range="30m" type="button">30m</button>
+                        <button class="seg-btn" data-range="1h" type="button">1h</button>
+                        <button class="seg-btn" data-range="3h" type="button">3h</button>
+                        <button class="seg-btn" data-range="6h" type="button">6h</button>
+                        <button class="seg-btn" data-range="12h" type="button">12h</button>
+                        <button class="seg-btn" data-range="24h" type="button">24h</button>
+                    </div>
+                    <div class="seg" role="group" aria-label="Aggregation">
+                        <button class="seg-btn" data-agg="avg" type="button">avg</button>
+                        <button class="seg-btn" data-agg="max" type="button">max</button>
+                    </div>
+                        <button id="overlayClose" class="btn" type="button">Close</button>
+                </div>
             </div>
         <div class="chart-wrap">
             <canvas id="chart"></canvas>

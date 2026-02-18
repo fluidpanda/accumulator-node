@@ -1,8 +1,8 @@
 import Fastify from "fastify";
-import type { HistoryState } from "@/history/store";
+import type { HistoryState, HistoryAgg } from "@/history/store";
 import type { Logger } from "@/logging/logger";
 import type { Runner, RunnerState } from "@/service/runner";
-import { renderPage } from "@/api/static/page";
+import { renderPage } from "@/frontend/page";
 
 export interface ApiOpts {
     logger: Logger;
@@ -25,16 +25,31 @@ export function createApi(opts: ApiOpts): ApiServer {
         return opts.runner.getState();
     });
     app.get("/api/history", (req, reply) => {
-        const q = req.query as Partial<{ deviceId: string; metric: string; limit: string }>;
-        const deviceId: string | undefined = q.deviceId;
-        const metric: string = q.metric ?? "co2ppm";
-        const limitRaw: number = q.limit ? Number(q.limit) : 600;
-        if (!deviceId) {
+        const q = req.query as Partial<{
+            deviceId: string;
+            metric: string;
+            fromMs: string;
+            toMs: string;
+            bucketMs: string;
+            agg: HistoryAgg;
+        }>;
+        if (!q.deviceId) {
             reply.code(400);
             return { error: "deviceId is required" };
         }
-        const limit: number = Number.isFinite(limitRaw) ? Math.max(1, Math.min(10_000, limitRaw)) : 600;
-        return opts.history.get(deviceId, metric, limit);
+        const now: number = Date.now();
+        const toMs: number = q.toMs ? Number(q.toMs) : now;
+        const fromMs: number = q.fromMs ? Number(q.fromMs) : toMs - 60 * 60 * 1000;
+        const bucketMs: number = q.bucketMs ? Number(q.bucketMs) : 5 * 60 * 1000;
+
+        return opts.history.query({
+            deviceId: q.deviceId,
+            metrics: q.metric ?? "co2ppm",
+            fromMs,
+            toMs,
+            bucketMs,
+            agg: q.agg ?? "avg",
+        });
     });
     app.get("/", async (req, reply): Promise<string> => {
         reply.header("content-type", "text/html; charset=utf-8");

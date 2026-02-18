@@ -14,8 +14,8 @@ function escapeTemplateLiteral(s: string): string {
 async function main(): Promise<void> {
     const __filename: string = fileURLToPath(import.meta.url);
     const __dirname: string = path.dirname(__filename);
-    const entry: string = path.join(__dirname, "script.ts");
-    const outFile: string = path.join(__dirname, "generated.ts");
+    const entry: string = path.join(__dirname, "app.ts");
+    const outFile: string = path.join(__dirname, "res/generated.ts");
     const result = await build({
         entryPoints: [entry],
         bundle: true,

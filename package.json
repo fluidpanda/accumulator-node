@@ -7,7 +7,7 @@
         "lint": "eslint --fix . && prettier --write --log-level warn .",
         "test": "node --import tsx/esm --test src/tests/run.test.ts",
         "build": "tsup",
-        "gen": "tsx watch src/api/static/generated.ts",
+        "gen": "tsx src/frontend/convert.ts",
         "dev": "tsx watch src/main.ts"
     },
     "keywords": [],
