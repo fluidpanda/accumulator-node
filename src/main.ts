@@ -7,6 +7,7 @@ import type { ServiceDependencies } from "@/service/deps";
 import type { Runner } from "@/service/runner";
 import { createApi } from "@/api/http";
 import { initEnv, envStr, envInt } from "@/helpers/envs";
+import { createSqliteHistoryState } from "@/history/sqlite";
 import { createHistoryState } from "@/history/store";
 import { createListener } from "@/listener/listener";
 import { createLogger } from "@/logging/logger";
@@ -20,12 +21,17 @@ const CAPTURE_PORT: number = envInt("CAPTURE_PORT", 4_5454);
 const POLLING_INTERVAL_MS: number = envInt("POLLING_INTERVAL_MS", 5_000);
 const DEVICE_TTL_MS: number = envInt("DEVICE_TTL_MS", 60_000);
 const WEB_PORT: number = envInt("WEB_PORT", 8080);
+const HISTORY_BACKEND: string = envStr("HISTORY_BACKEND") ?? "memory";
+const HISTORY_DB: string = envStr("HISTORY_DB") ?? "./data/history.sqlite";
 
 const logger: Logger = createLogger();
 
 async function main(): Promise<void> {
     const deps: ServiceDependencies = buildServiceDeps(logger);
-    const history: HistoryState = createHistoryState({ maxPointsPerSeries: 10_000 });
+    const history: HistoryState =
+        HISTORY_BACKEND === "sqlite"
+            ? createSqliteHistoryState({ path: HISTORY_DB })
+            : createHistoryState({ maxPointsPerSeries: 10_000 });
     const runner: Runner = createRunner({
         logger,
         history,
