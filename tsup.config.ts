@@ -7,4 +7,5 @@ export default defineConfig({
     outDir: "dist",
     clean: true,
     sourcemap: true,
+    external: ["better-sqlite3"],
 });
