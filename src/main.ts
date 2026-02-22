@@ -22,7 +22,7 @@ const POLLING_INTERVAL_MS: number = envInt("POLLING_INTERVAL_MS", 5_000);
 const DEVICE_TTL_MS: number = envInt("DEVICE_TTL_MS", 60_000);
 const WEB_PORT: number = envInt("WEB_PORT", 8080);
 const HISTORY_BACKEND: string = envStr("HISTORY_BACKEND") ?? "memory";
-const HISTORY_DB: string = envStr("HISTORY_DB") ?? "./data/history.sqlite";
+const HISTORY_DB: string = envStr("HISTORY_DB") ?? "./history.sqlite";
 const HISTORY_DAYS: number = envInt("HISTORY_DAYS", 30);
 
 const logger: Logger = createLogger();
