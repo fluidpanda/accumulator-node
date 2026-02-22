@@ -1,6 +1,6 @@
 {
     "name": "accumulator",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Sensors orchestrator service",
     "main": "dist/main.js",
     "scripts": {
