@@ -4,7 +4,7 @@ export type HistoryAgg = "avg" | "max" | "min";
 
 export interface HistoryQuery {
     deviceId: string;
-    metrics: string;
+    metric: string;
     fromMs: number;
     toMs: number;
     bucketMs: number;
@@ -68,13 +68,13 @@ export function createHistoryState(opts: HistoryStateOpts): HistoryState {
             series.set(k, arr);
         },
         prune(deviceId: string): void {
-            const prefix = `${deviceId}|`;
+            const prefix = `${deviceId}:`;
             for (const k of series.keys()) {
                 if (k.startsWith(prefix)) series.delete(k);
             }
         },
         query(q: HistoryQuery): Array<MetricPoint> {
-            const k: string = key(q.deviceId, q.metrics);
+            const k: string = key(q.deviceId, q.metric);
             const arr: Array<MetricPoint> = series.get(k) ?? [];
             return aggregatePoints(arr, q.fromMs, q.toMs, q.bucketMs, q.agg);
         },

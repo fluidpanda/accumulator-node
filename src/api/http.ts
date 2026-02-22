@@ -44,7 +44,7 @@ export function createApi(opts: ApiOpts): ApiServer {
 
         return opts.history.query({
             deviceId: q.deviceId,
-            metrics: q.metric ?? "co2ppm",
+            metric: q.metric ?? "co2ppm",
             fromMs,
             toMs,
             bucketMs,
