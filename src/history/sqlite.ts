@@ -1,9 +1,11 @@
 import Database from "better-sqlite3";
+import type { Statement } from "better-sqlite3";
 import type { HistoryAgg, HistoryQuery, HistoryState } from "@/history/store";
 import type { MetricPoint } from "@/history/types";
 
 export interface SqliteHistoryOpts {
     path: string;
+    retentionDays?: number;
 }
 
 export function createSqliteHistoryState(opts: SqliteHistoryOpts): HistoryState {
@@ -20,8 +22,15 @@ export function createSqliteHistoryState(opts: SqliteHistoryOpts): HistoryState 
     CREATE INDEX IF NOT EXISTS idx_points_device_metric_ts
         ON points(deviceId, metric, tsMs)
     `);
-    const stmtInsert = db.prepare(`INSERT INTO points(deviceId, metric, tsMs, value) VALUES (?, ?, ?, ?)`);
-    const stmtDevice = db.prepare(`DELETE FROM points WHERE deviceId = ?`);
+    const stmtInsert: Statement<Array<unknown>> = db.prepare(
+        `INSERT INTO points(deviceId, metric, tsMs, value) VALUES (?, ?, ?, ?)`,
+    );
+    const stmtDevice: Statement<Array<unknown>> = db.prepare(`DELETE FROM points WHERE deviceId = ?`);
+    const retentionMs: number | null =
+        opts.retentionDays && opts.retentionDays > 0 ? opts.retentionDays * 24 * 60 * 60 * 1_000 : null;
+    const stmtDeleteOld: Statement<Array<unknown>> | null = retentionMs
+        ? db.prepare(`DELETE FROM points WHERE tsMs < ?`)
+        : null;
     function aggSql(agg: HistoryAgg): string {
         switch (agg) {
             case "avg":
@@ -35,6 +44,10 @@ export function createSqliteHistoryState(opts: SqliteHistoryOpts): HistoryState 
     return {
         push(deviceId: string, metric: string, point: MetricPoint): void {
             stmtInsert.run(deviceId, metric, point.tsMs, point.value);
+            if (retentionMs && stmtDeleteOld) {
+                const cutoff: number = Date.now() - retentionMs;
+                stmtDeleteOld.run(cutoff);
+            }
         },
         prune(deviceId: string): void {
             stmtDevice.run(deviceId);
