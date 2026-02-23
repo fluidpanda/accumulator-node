@@ -164,6 +164,8 @@ export function renderPage(): string {
                         <button class="seg-btn" data-range="6h" type="button">6h</button>
                         <button class="seg-btn" data-range="12h" type="button">12h</button>
                         <button class="seg-btn" data-range="24h" type="button">24h</button>
+                        <button class="seg-btn" data-range="1w" type="button">1w</button>
+                        <button class="seg-btn" data-range="1mo" type="button">1mo</button>
                     </div>
                     <div class="seg" role="group" aria-label="Aggregation">
                         <button class="seg-btn" data-agg="avg" type="button">avg</button>

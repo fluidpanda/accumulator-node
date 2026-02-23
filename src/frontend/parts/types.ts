@@ -16,5 +16,5 @@ export interface State {
     devices: Array<Device>;
 }
 
-export type RangePreset = "1m" | "5m" | "30m" | "1h" | "3h" | "6h" | "12h" | "24h";
+export type RangePreset = "1m" | "5m" | "30m" | "1h" | "3h" | "6h" | "12h" | "24h" | "1w" | "1mo";
 export type AggPreset = "avg" | "max";
