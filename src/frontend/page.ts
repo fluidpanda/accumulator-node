@@ -7,9 +7,17 @@ export function renderPage(): string {
 <head>
     <meta charset="utf-8" />
     <title>Accumulator</title>
+    <link rel="preconnect" href="https://rsms.me" />
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
     <style>
+    :root {
+        font-family: Inter, sans-serif;
+        font-feature-settings: 'liga' 1, 'calt' 1;
+    }
+    @supports (font-variation-settings: normal) {
+        :root { font-family: InterVariable, sans-serif; }
+    }
     body {
-        font-family: system-ui, sans-serif;
         margin: 40px;
         background: #111;
         color: #eee;
