@@ -11,6 +11,7 @@ export interface Overlay {
     open(deviceId: string): void;
     close(): void;
     sync(): void;
+    setReading(ppm: number | null): void;
 }
 
 export interface OverlayHandlers {
@@ -22,6 +23,12 @@ export function createOverlay(state: OverlayState, handlers: OverlayHandlers): O
     const overlay: HTMLDivElement = byId<HTMLDivElement>("overlay");
     const label: HTMLSpanElement = byId<HTMLSpanElement>("overlayDevice");
     const closeBtn: HTMLButtonElement = byId<HTMLButtonElement>("overlayClose");
+    const readingBox: HTMLDivElement = byId<HTMLDivElement>("overlayReading");
+    const readingValue: HTMLSpanElement = byId<HTMLSpanElement>("overlayReadingValue");
+    function setReading(ppm: number | null): void {
+        readingValue.textContent = ppm === null ? "—" : String(ppm);
+        readingBox.classList.toggle("warning", ppm !== null && ppm > 600);
+    }
     function setActiveButtons(): void {
         for (const b of overlay.querySelectorAll<HTMLButtonElement>("[data-range]")) {
             b.classList.toggle("active", b.dataset.range === state.range);
@@ -70,5 +77,6 @@ export function createOverlay(state: OverlayState, handlers: OverlayHandlers): O
         sync(): void {
             setActiveButtons();
         },
+        setReading,
     };
 }

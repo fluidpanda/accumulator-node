@@ -150,6 +150,36 @@ export function renderPage(): string {
         background: #222;
         opacity: 1;
     }
+    .overlay-reading {
+        position: absolute;
+        left: 50px;
+        top: 12px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid #333;
+        background: rgba(0, 0, 0, 0.35);
+        backdrop-filter: blur(6px);
+        display: grid;
+        gap: 2px;
+        min-width: 110px;
+    }
+    .overlay-reading-label {
+        font-size: 12px;
+        opacity: 0.7;
+        letter-spacing: 0.02em;
+    }
+    .overlay-reading-value {
+        font-size: 32px;
+        font-weight: 700;
+        line-height: 1;
+    }
+    .overlay-reading.warning {
+        border-color: rgba(255,160,122,0.65);
+        box-shadow: 0 0 0 1px rgba(255,160,122,0.15) inset;
+    }
+    .overlay-reading.warning .overlay-reading-value {
+        color: lightsalmon;
+    }
     </style>
 </head>
 <body>
@@ -183,6 +213,10 @@ export function renderPage(): string {
                 </div>
             </div>
         <div class="chart-wrap">
+            <div id="overlayReading" class="overlay-reading" aria-live="polite">
+                <div class="overlay-reading-label">CO₂</div>
+                <div id="overlayReadingValue" class="overlay-reading-value">—</div>
+            </div>
             <canvas id="chart"></canvas>
         </div>
         </div>
