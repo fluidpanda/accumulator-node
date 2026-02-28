@@ -56,20 +56,21 @@ export function createSqliteHistoryState(opts: SqliteHistoryOpts): HistoryState 
             const expr: string = aggSql(q.agg);
             const sql = `
             SELECT
-                (CAST(tsMs / ? AS INTEGER) * ?) AS tsMs,
+                (tsMs - (tsMs % ?)) AS bucketTs,
                 ${expr} AS value
             FROM points
             WHERE deviceId = ?
                 AND metric = ?
                 AND tsMs >= ?
                 AND tsMs <= ?
-            GROUP BY tsMs
-            ORDER BY tsMs`;
-            const rows = db.prepare(sql).all(q.bucketMs, q.bucketMs, q.deviceId, q.metric, q.fromMs, q.toMs) as Array<{
-                tsMs: number;
+            GROUP BY bucketTs
+            ORDER BY bucketTs
+            `;
+            const rows = db.prepare(sql).all(q.bucketMs, q.deviceId, q.metric, q.fromMs, q.toMs) as Array<{
+                bucketTs: number;
                 value: number;
             }>;
-            return rows.map((r) => ({ tsMs: r.tsMs, value: r.value }));
+            return rows.map((r) => ({ tsMs: Number(r.bucketTs), value: Number(r.value) }));
         },
     };
 }
