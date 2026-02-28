@@ -1,4 +1,5 @@
 import Fastify from "fastify";
+import type { InjectOptions, LightMyRequestResponse } from "fastify";
 import type { HistoryState, HistoryAgg } from "@/history/store";
 import type { Logger } from "@/logging/logger";
 import type { Runner, RunnerState } from "@/service/runner";
@@ -15,6 +16,7 @@ export interface ApiOpts {
 export interface ApiServer {
     start(): Promise<void>;
     stop(): Promise<void>;
+    inject(opts: InjectOptions): Promise<LightMyRequestResponse>;
 }
 
 export function createApi(opts: ApiOpts): ApiServer {
@@ -63,6 +65,9 @@ export function createApi(opts: ApiOpts): ApiServer {
         async stop(): Promise<void> {
             await app.close();
             logger.info("api stopped");
+        },
+        inject(req: InjectOptions): Promise<LightMyRequestResponse> {
+            return app.inject(req);
         },
     };
 }
