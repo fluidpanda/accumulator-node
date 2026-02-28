@@ -1,6 +1,6 @@
 import type { MetricPoint } from "@/history/types";
 
-export type HistoryAgg = "avg" | "max" | "min";
+export type HistoryAgg = "avg" | "max" | "min" | "raw";
 
 export interface HistoryQuery {
     deviceId: string;
@@ -9,6 +9,7 @@ export interface HistoryQuery {
     toMs: number;
     bucketMs: number;
     agg: HistoryAgg;
+    limit?: number;
 }
 
 export interface HistoryState {

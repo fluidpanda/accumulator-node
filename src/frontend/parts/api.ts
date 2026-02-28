@@ -19,12 +19,15 @@ export async function fetchHistory(p: HistoryParams): Promise<Array<MetricPoint>
     const rangeMs: number = rangeToMs(p.range);
     const fromMs: number = toMs - rangeMs;
     const bucketMs: number = pickBucketMs(rangeMs, p.targetPoints ?? 180);
+    const limit: number | undefined = p.agg === "raw" ? 10_000 : undefined;
 
     const url: string =
         `/api/history?deviceId=${encodeURIComponent(p.deviceId)}` +
         `&metric=${encodeURIComponent(p.metric)}` +
         `&fromMs=${fromMs}&toMs=${toMs}` +
-        `&bucketMs=${bucketMs}&agg=${p.agg}`;
+        (p.agg === "raw" ? "" : `&bucketMs=${bucketMs}`) +
+        `&agg=${p.agg}` +
+        (limit ? `&limit=${limit}` : "");
 
     const res: Response = await fetch(url);
     return (await res.json()) as Array<MetricPoint>;

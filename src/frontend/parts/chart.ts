@@ -18,7 +18,7 @@ export function ensureChart(): ChartType<"line", Array<number>, string> {
                 {
                     label: "CO₂ ppm",
                     data: [],
-                    pointRadius: 0,
+                    pointRadius: 1,
                     borderWidth: 4,
                     tension: 0,
                     cubicInterpolationMode: "monotone",

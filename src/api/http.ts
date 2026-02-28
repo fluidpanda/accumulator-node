@@ -34,6 +34,7 @@ export function createApi(opts: ApiOpts): ApiServer {
             toMs: string;
             bucketMs: string;
             agg: HistoryAgg;
+            limit?: number;
         }>;
         if (!q.deviceId) {
             reply.code(400);
@@ -43,6 +44,7 @@ export function createApi(opts: ApiOpts): ApiServer {
         const toMs: number = q.toMs ? Number(q.toMs) : now;
         const fromMs: number = q.fromMs ? Number(q.fromMs) : toMs - 60 * 60 * 1000;
         const bucketMs: number = q.bucketMs ? Number(q.bucketMs) : 5 * 60 * 1000;
+        const limit: number | undefined = q.limit ? Number(q.limit) : undefined;
 
         return opts.history.query({
             deviceId: q.deviceId,
@@ -51,6 +53,7 @@ export function createApi(opts: ApiOpts): ApiServer {
             toMs,
             bucketMs,
             agg: q.agg ?? "avg",
+            limit,
         });
     });
     app.get("/", async (req, reply): Promise<string> => {
