@@ -39,8 +39,6 @@ export function createSqliteHistoryState(opts: SqliteHistoryOpts): HistoryState 
                 return "MAX(value)";
             case "min":
                 return "MIN(value)";
-            case "raw":
-                return "value";
         }
     }
     return {
@@ -55,23 +53,6 @@ export function createSqliteHistoryState(opts: SqliteHistoryOpts): HistoryState 
             stmtDevice.run(deviceId);
         },
         query(q: HistoryQuery): Array<MetricPoint> {
-            if (q.agg === "raw") {
-                const limit: number = q.limit ?? 10_000;
-                const sql = `
-                SELECT tsMs, value
-                FROM points
-                WHERE deviceId = ?
-                    AND metric = ?
-                    AND tsMs >= ?
-                    AND tsMs <= ?
-                ORDER BY tsMs
-                LIMIT ?`;
-                const rows = db.prepare(sql).all(q.deviceId, q.metric, q.fromMs, q.toMs, limit) as Array<{
-                    tsMs: number;
-                    value: number;
-                }>;
-                return rows.map((r) => ({ tsMs: Number(r.tsMs), value: Number(r.value) }));
-            }
             const expr: string = aggSql(q.agg);
             const sql = `
             SELECT
