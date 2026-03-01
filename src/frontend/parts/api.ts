@@ -24,7 +24,8 @@ export async function fetchHistory(p: HistoryParams): Promise<Array<MetricPoint>
         `/api/history?deviceId=${encodeURIComponent(p.deviceId)}` +
         `&metric=${encodeURIComponent(p.metric)}` +
         `&fromMs=${fromMs}&toMs=${toMs}` +
-        `&bucketMs=${bucketMs}&agg=${p.agg}`;
+        (p.agg === "raw" ? "" : `&bucketMs=${bucketMs}`) +
+        `&agg=${p.agg}`;
 
     const res: Response = await fetch(url);
     return (await res.json()) as Array<MetricPoint>;
