@@ -39,6 +39,8 @@ export function createSqliteHistoryState(opts: SqliteHistoryOpts): HistoryState 
                 return "MAX(value)";
             case "min":
                 return "MIN(value)";
+            case "raw":
+                return "value";
         }
     }
     return {

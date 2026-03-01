@@ -206,8 +206,10 @@ export function renderPage(): string {
                         <button class="seg-btn" data-range="1mo" type="button">1mo</button>
                     </div>
                     <div class="seg" role="group" aria-label="Aggregation">
+                        <button class="seg-btn" data-agg="min" type="button">min</button>
                         <button class="seg-btn" data-agg="avg" type="button">avg</button>
                         <button class="seg-btn" data-agg="max" type="button">max</button>
+                        <button class="seg-btn" data-agg="raw" type="button">raw</button>
                     </div>
                         <button id="overlayClose" class="btn" type="button">Close</button>
                 </div>

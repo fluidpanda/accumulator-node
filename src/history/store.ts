@@ -1,6 +1,6 @@
 import type { MetricPoint } from "@/history/types";
 
-export type HistoryAgg = "avg" | "max" | "min";
+export type HistoryAgg = "avg" | "max" | "min" | "raw";
 
 export interface HistoryQuery {
     deviceId: string;
