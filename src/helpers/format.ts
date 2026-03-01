@@ -9,7 +9,7 @@ export function createTickFormatter(points: Array<ChartAxes>) {
     const showDate: boolean = rangeMs >= oneDay;
     return (ts: number): string => {
         const d = new Date(ts);
-        const day: string = String(d.getDay()).padStart(2, "0");
+        const day: string = String(d.getDate()).padStart(2, "0");
         const month: string = String(d.getMonth() + 1).padStart(2, "0");
         const hour: string = String(d.getHours()).padStart(2, "0");
         const minute: string = String(d.getMinutes()).padStart(2, "0");
