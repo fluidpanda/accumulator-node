@@ -8,7 +8,7 @@
         "test": "node --import tsx/esm --test src/tests/run.test.ts",
         "build": "tsup",
         "gen": "tsx src/frontend/convert.ts",
-        "dev": "tsx watch src/main.ts"
+        "dev": "npm run gen && tsx watch src/main.ts"
     },
     "keywords": [],
     "author": "borr",
@@ -16,9 +16,6 @@
     "type": "module",
     "imports": {
         "@/*": "./dist/*"
-    },
-    "overrides": {
-        "minimatch": "^10.2.1"
     },
     "devDependencies": {
         "@eslint/js": "^9.39.2",
@@ -37,6 +34,7 @@
         "@fastify/static": "^9.0.0",
         "better-sqlite3": "^12.6.2",
         "chart.js": "^4.5.1",
+        "chartjs-adapter-date-fns": "^3.0.0",
         "dotenv": "^17.3.1",
         "fastify": "^5.7.4",
         "pino": "^10.3.1"
