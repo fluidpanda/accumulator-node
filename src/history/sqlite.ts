@@ -13,14 +13,14 @@ export function createSqliteHistoryState(opts: SqliteHistoryOpts): HistoryState 
     db.pragma("journal_mode = WAL");
     db.pragma("synchronous = NORMAL");
     db.exec(`
-    CREATE TABLE IF NOT EXISTS points (
-        deviceId TEXT NOT NULL,
-        metric   TEXT NOT NULL,
-        tsMs     INTEGER NOT NULL,
-        value    REAL NOT NULL
-    );
-    CREATE INDEX IF NOT EXISTS idx_points_device_metric_ts
-        ON points(deviceId, metric, tsMs)
+        CREATE TABLE IF NOT EXISTS points (
+            deviceId TEXT NOT NULL,
+            metric   TEXT NOT NULL,
+            tsMs     INTEGER NOT NULL,
+            value    REAL NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_points_device_metric_ts
+            ON points(deviceId, metric, tsMs)
     `);
     const stmtInsert: Statement<Array<unknown>> = db.prepare(
         `INSERT INTO points(deviceId, metric, tsMs, value) VALUES (?, ?, ?, ?)`,
@@ -57,16 +57,16 @@ export function createSqliteHistoryState(opts: SqliteHistoryOpts): HistoryState 
         query(q: HistoryQuery): Array<MetricPoint> {
             const expr: string = aggSql(q.agg);
             const sql = `
-            SELECT
-                (tsMs - (tsMs % ?)) AS bucketTs,
-                ${expr} AS value
-            FROM points
-            WHERE deviceId = ?
-                AND metric = ?
-                AND tsMs >= ?
-                AND tsMs <= ?
-            GROUP BY bucketTs
-            ORDER BY bucketTs
+                SELECT
+                    (tsMs - (tsMs % ?)) AS bucketTs,
+                    ${expr} AS value
+                FROM points
+                WHERE deviceId = ?
+                    AND metric = ?
+                    AND tsMs >= ?
+                    AND tsMs <= ?
+                GROUP BY bucketTs
+                ORDER BY bucketTs
             `;
             const rows = db.prepare(sql).all(q.bucketMs, q.deviceId, q.metric, q.fromMs, q.toMs) as Array<{
                 bucketTs: number;
