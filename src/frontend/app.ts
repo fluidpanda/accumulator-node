@@ -23,7 +23,7 @@ async function refreshChart(): Promise<void> {
         metric: "co2ppm",
         range: overlayState.range,
         agg: overlayState.agg,
-        targetPoints: 100,
+        targetPoints: 180,
     });
     updateChart(points);
 }
