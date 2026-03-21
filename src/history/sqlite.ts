@@ -8,6 +8,16 @@ export interface SqliteHistoryOpts {
     retentionDays?: number;
 }
 
+interface RawPoints {
+    tsMs: number;
+    value: number;
+}
+
+interface BucketedPoints {
+    bucketTs: number;
+    value: number;
+}
+
 export function createSqliteHistoryState(opts: SqliteHistoryOpts): HistoryState {
     const db = new Database(opts.path);
     db.pragma("journal_mode = WAL");
@@ -55,6 +65,50 @@ export function createSqliteHistoryState(opts: SqliteHistoryOpts): HistoryState 
             stmtDevice.run(deviceId);
         },
         query(q: HistoryQuery): Array<MetricPoint> {
+            if (q.agg === "raw") {
+                const targetPoints: number = q.limit || 500;
+                // count all the points
+                const countSql = `
+                    SELECT COUNT(*) as count
+                    FROM points
+                    WHERE deviceId = ?
+                        AND metric = ?
+                        AND tsMs >= ?
+                        AND tsMs <= ?
+                `;
+                const countResult = db.prepare(countSql).get(q.deviceId, q.metric, q.fromMs, q.toMs) as {
+                    count: number;
+                };
+                const actualPoints: number = countResult.count;
+                // show all point on small windows
+                if (actualPoints <= targetPoints) {
+                    const sql = `
+                        SELECT tsMs, value
+                        FROM points
+                        WHERE deviceId = ?
+                            AND metric = ?
+                            AND tsMs >= ?
+                            AND tsMs <= ?
+                        ORDER BY tsMs
+                    `;
+                    const rows = db.prepare(sql).all(q.deviceId, q.metric, q.fromMs, q.toMs) as Array<RawPoints>;
+                    return rows.map((r: RawPoints) => ({ tsMs: Number(r.tsMs), value: Number(r.value) }));
+                }
+                // downsampling points
+                const step: number = Math.floor(actualPoints / targetPoints);
+                const sql = `
+                    SELECT tsMs, value
+                    FROM points
+                    WHERE deviceId = ?
+                        AND metric = ?
+                        AND tsMs >= ?
+                        AND tsMs <= ?
+                        AND (rowid % ? = 0)
+                    ORDER BY tsMs
+                `;
+                const rows = db.prepare(sql).all(q.deviceId, q.metric, q.fromMs, q.toMs, step) as Array<RawPoints>;
+                return rows.map((r: RawPoints) => ({ tsMs: Number(r.tsMs), value: Number(r.value) }));
+            }
             const expr: string = aggSql(q.agg);
             const sql = `
                 SELECT
@@ -68,11 +122,10 @@ export function createSqliteHistoryState(opts: SqliteHistoryOpts): HistoryState 
                 GROUP BY bucketTs
                 ORDER BY bucketTs
             `;
-            const rows = db.prepare(sql).all(q.bucketMs, q.deviceId, q.metric, q.fromMs, q.toMs) as Array<{
-                bucketTs: number;
-                value: number;
-            }>;
-            return rows.map((r) => ({ tsMs: Number(r.bucketTs), value: Number(r.value) }));
+            const rows = db
+                .prepare(sql)
+                .all(q.bucketMs, q.deviceId, q.metric, q.fromMs, q.toMs) as Array<BucketedPoints>;
+            return rows.map((r: BucketedPoints) => ({ tsMs: Number(r.bucketTs), value: Number(r.value) }));
         },
     };
 }

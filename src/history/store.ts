@@ -9,6 +9,7 @@ export interface HistoryQuery {
     toMs: number;
     bucketMs: number;
     agg: HistoryAgg;
+    limit?: number;
 }
 
 export interface HistoryState {

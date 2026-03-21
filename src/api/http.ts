@@ -42,7 +42,7 @@ export function createApi(opts: ApiOpts): ApiServer {
         const now: number = Date.now();
         const toMs: number = q.toMs ? Number(q.toMs) : now;
         const fromMs: number = q.fromMs ? Number(q.fromMs) : toMs - 60 * 60 * 1000;
-        const bucketMs: number = q.bucketMs ? Number(q.bucketMs) : 5 * 60 * 1000;
+        const bucketMs: number = q.agg === "raw" ? 0 : q.bucketMs ? Number(q.bucketMs) : 5 * 60 * 1000;
 
         return opts.history.query({
             deviceId: q.deviceId,
